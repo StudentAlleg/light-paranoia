@@ -1,0 +1,132 @@
+:: StoryTitle
+light paranoia
+
+
+:: StoryData
+{
+  "ifid": "503EEB40-76C2-42AD-B577-0847FB1A8420",
+  "format": "Harlowe",
+  "format-version": "3.3.4",
+  "start": "Intro",
+  "zoom": 1
+}
+
+
+:: Intro {"position":"800,300","size":"100,100"}
+In your hand you have a lantern, in front of you is an ominous door.
+
+You can choose to hold your lantern high, middle, or low, and walk through the door.
+
+($choices:)
+
+
+:: Room1 {"position":"800,425","size":"100,100"}
+You enter a dark library.
+($displayEnvironment: (a: 0,1,2))
+
+
+
+:: Room10 {"position":"925,925","size":"100,100"}
+At the end of the hall is a door, you open it to exit outside. You survived!
+
+
+:: Room2 {"position":"800,550","size":"100,100"}
+You walk through a side door, where there tables setup for people to read in.
+($displayEnvironment: (a: 2,0,2))
+
+
+:: Room3 {"position":"800,675","size":"100,100"}
+Off to the side is a trapdoor, leading down to the archives. You take it.
+($displayEnvironment: (a: 0,0,2))
+
+
+:: Room4 {"position":"800,800","size":"100,100"}
+Up ahead is a corner.
+($displayEnvironment: (a: 2,2,0))
+
+
+:: Room5 {"position":"800,925","size":"100,100"}
+In this corridor, across the ceiling there are intricate arches, if you looked up there.
+($displayEnvironment: (a: 2,0,2))
+
+
+:: Room6 {"position":"925,425","size":"100,100"}
+You come to a square room, with a ladder upstairs.
+($displayEnvironment: (a: 1,2,0))
+
+
+:: Room7 {"position":"925,550","size":"100,100"}
+After climbing up the ladder, you find yourself in a small bedroom.
+($displayEnvironment: (a: 2,2,0))
+
+
+:: Room8 {"position":"925,675","size":"100,100"}
+Leaving the bedroom, you find a hall with some pictures hanging nearby.
+($displayEnvironment: (a: 0,2,0))
+
+
+:: Room9 {"position":"925,800","size":"100,100"}
+Passing some doors, you turn the corner and find a longer hall.
+($displayEnvironment: (a: 2,0,1))
+
+
+:: backup {"position":"400,300","size":"100,100"}
+ [[--(for: each _locNum, ..._loc)[
+(if: _locNum is 1)[(set: $encounters to $encounters - 1)]
+ (if: _locNum is 2)[(set: $encounters to $encounters + 1)]
+        
+		(set: _out to _out + (cond: 
+        _locNum is 0, 
+        	"*silence*", 
+        _locNum is 1,
+        	"*scurryingnoise*",
+        _locNum is 2,
+        	"*groan*"))
+          (set: _out to _out + "\n")
+            ]--]]
+
+
+:: startup [startup] {"position":"600,300","size":"100,100"}
+{
+(set: num-type $lanternPos to 0)
+(set: num-type $encounters to 0)
+(set: num-type $turn to 0)
+
+(set: (a: ...str)-type $lanternDescriptor to (array: "up" ,"to" , "down"))
+(set: (a: ...str)-type $lanternRelative to (array: "high" ,"middle" , "low"))
+
+(set: $lantern to (macro: num-type _pos, [
+
+    (out-data: "" + (nth: _pos, "up" ,"in the" , "down") + " " + (nth: _pos, "high" ,"middle" , "low") + "")
+    ]))
+}
+
+(set: $displayEnvironment to (macro: (a: ...num)-type _loc, [
+	(set: num-type _decisionCode to _loc's $lanternPos)
+    (set: str-type _out to "")
+    (set: _out to _out + "You bring your lantern " + ($lantern: $lanternPos) + "\n" + (upperfirst: ($lantern: $lanternPos)) + " you see ")
+(if: _decisionCode is 1)[(set: $encounters to $encounters - 1)]
+(if: _decisionCode is 2)[(set: $encounters to $encounters + 1)]
+
+(set: _out to _out + (cond: 
+        _decisionCode is 0, 
+        	"nothing", 
+        _decisionCode is 1,
+        	"a shape quickly disappear. You feel better.",
+        _decisionCode is 2,
+        	(either:"a pair of beedy eyes that seem to devour your soul. You feel worse.", "a mark of a devil, that curses those that look upon it")))
+    (output:)[_out
+    	(if: $encounters < 3)
+        	[($choices:)]
+       (else:) 
+       [You died]]
+]))
+
+(set: $choices to (macro: [
+	(set: _nextRoom to (go-to:"Room" + (str: turn)))
+    (output:)[
+    (link: "High")[(set: $lanternPos to 1) _nextRoom]
+    (link: "Medium")[(set: $lanternPos to 2) _nextRoom]
+    (link: "Low")[(set: $lanternPos to 3) _nextRoom]
+    ]
+]))
